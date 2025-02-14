@@ -1,0 +1,5 @@
+[
+    { name: 'S1', elems: [0,1,2] },
+    { name: 'S2', elems: [1,2,3] },
+    { name: 'S3', elems: [0,2,4] },
+];

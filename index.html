@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/venn.js@0.2.20/venn.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@upsetjs/dist@1.0.0/dist/upsetjs.umd.min.js"></script> -->
+    <script src="https://unpkg.com/@upsetjs/bundle"></script>
+    <style>
+         /* Basic styling for the page */
+         body {
+            font-family: sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap; /* Allows items to wrap onto multiple lines */
+            justify-content: space-around; /* Distributes space around elements */
+            padding: 20px;
+        }
+        .chart-container {
+            width: 45%; /* Adjust as needed */
+            margin-bottom: 20px; /* Space between chart elements */
+            border: 1px solid #ccc; /* Optional border */
+            padding: 10px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #venn-diagram { /* Target the Venn diagram container */
+            width: 45%; /* Adjust as needed */
+            height: 300; /* Set a height for the Venn diagram */
+            margin-bottom: 20px;
+            margin-right: 20px;
+            margin: 20px;
+            border: 1px solid #ccc; /* Optional border */
+        }
+
+        .legend {
+            margin-top: 20px; /* Space between the Venn diagram and the legend */
+            display: flex; /* Arrange legend items horizontally */
+            justify-content: center; /* Center the legend items */
+        }
+        
+        .legend div {
+            margin: 0 10px; /* Space between legend items */
+            padding: 5px 10px; /* Add some padding around the labels */
+            border: 1px solid #ccc; /* Optional border for the legend items */
+            border-radius: 5px; /* Optional rounded corners */
+        }
+        /* ... (same CSS as before) ... */
+    </style>
+</head>
+<body>
+
+    <h1>Data Visualization Example</h1>
+
+    <div class="container">
+        <div class="chart-container">
+            <h2>Table</h2>
+            <table id="dataTable">
+                <thead>
+                    <tr></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h2>UpSet Plot</h2>
+            <div id="upset-plot"></div>
+        </div>
+
+        <div class="chart-container" id="venn-diagram">
+            <h2>Venn Diagram</h2>
+        </div>
+        
+
+        <div class="chart-container">
+            <h2>Bar Chart</h2>
+            <canvas id="barChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h2>Line Chart</h2>
+            <canvas id="lineChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            function loadData(filename, callback) {
+                fetch(filename)
+                    .then(response => response.text())
+                    .then(data => callback(data))
+                    .catch(error => console.error("Error loading data:", error));
+            }
+
+            // Load table data
+            loadData("data/table_data.txt", function (data) {
+                const table = document.getElementById("dataTable");
+                const lines = data.split('\n');
+                const header = lines[0].split(',');
+                let thead = table.querySelector("thead tr");
+                header.forEach(col => {
+                    let th = document.createElement("th");
+                    th.textContent = col;
+                    thead.appendChild(th);
+                });
+                const tbody = table.querySelector("tbody");
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    const row = tbody.insertRow();
+                    values.forEach(value => {
+                        const cell = row.insertCell();
+                        cell.textContent = value;
+                    });
+                }
+            });
+
+            // Load bar chart data
+            loadData("data/bar_chart_data.txt", function (data) {
+                const lines = data.split('\n');
+                const labels = lines[0].split(',');
+                const dataValues = lines[1].split(',').map(Number);
+
+                const barChartCanvas = document.getElementById('barChart').getContext('2d');
+                new Chart(barChartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Sales',
+                            data: dataValues,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Load line chart data
+            loadData("data/line_chart_data.txt", function (data) {
+                const lines = data.split('\n');
+                const labels = lines[0].split(',');
+                const dataValues = lines[1].split(',').map(Number);
+
+                const lineChartCanvas = document.getElementById('lineChart').getContext('2d');
+                new Chart(lineChartCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Temperature',
+                            data: dataValues,
+                            borderColor: 'blue',
+                            borderWidth: 1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+
+             // Load Venn Diagram data (from JSON)
+  // Load Venn Diagram data (from JSON)
+
+  // from data/set.json to create a upset plot
+
+// Load Venn Diagram data (from JSON)
+// Load Venn Diagram data (from JSON)
+fetch('data/sets.json')
+    .then(response => response.json())
+    .then(setsData => {
+        const sets = [];
+
+        // Calculate set sizes and intersections
+        const setA = setsData.A;
+        const setB = setsData.B;
+        const setC = setsData.C;
+        console.log(setA, setB, setC);
+        // convert into name: element: dictionary for A, B C set. 
+  
+        // print setsData as a json object, like dictiionary.
+        upsetsdata=[]
+        for(var i in setsData){
+            console.log("Key: ", i, "Value: ", setsData[i]);
+            upsetsdata.push({
+                "name": i,
+                "elems": setsData[i]
+            });
+        }
+        
+
+        const sets_data = UpSetJS.asSets(upsetsdata);
+        const upsetPlot = document.getElementById('upset-plot');
+        UpSetJS.render(upsetPlot, { 
+            sets: sets_data,
+            width: 600,
+            height: 400,
+          });
+
+        // Create UpSet plot in upset-plot div
+       
+
+        // Calculate unique set sizes (important!)
+        const setA_only = setA.filter(x => !setB.includes(x) && !setC.includes(x));
+        const setB_only = setB.filter(x => !setA.includes(x) && !setC.includes(x));
+        const setC_only = setC.filter(x => !setA.includes(x) && !setB.includes(x));
+
+        sets.push({ sets: ["A"], size: setA_only.length, label: `${setA_only.length}` }); // Correct count for A
+        sets.push({ sets: ["B"], size: setB_only.length, label: `${setB_only.length}` }); // Correct count for B
+        sets.push({ sets: ["C"], size: setC_only.length, label: `${setC_only.length}` }); // Correct count for C
+
+
+        const intersectionAB = setA.filter(x => setB.includes(x));
+        sets.push({ sets: ["A", "B"], size: intersectionAB.length, label: `${intersectionAB.length}` });
+
+        const intersectionAC = setA.filter(x => setC.includes(x));
+        sets.push({ sets: ["A", "C"], size: intersectionAC.length, label: `${intersectionAC.length}` });
+
+        const intersectionBC = setB.filter(x => setC.includes(x));
+        sets.push({ sets: ["B", "C"], size: intersectionBC.length, label: `${intersectionBC.length}` });
+
+        const intersectionABC = setA.filter(x => setB.includes(x) && setC.includes(x));
+        sets.push({ sets: ["A", "B", "C"], size: intersectionABC.length, label: `${intersectionABC.length}` });
+
+        const vennContainer = d3.select("#venn-diagram");
+        const width = vennContainer.node().clientWidth;
+        const height = vennContainer.node().clientHeight;
+
+       // Define your color scale (using D3.js)
+// Define your color scale (using D3.js)
+const colorScale = d3.scaleOrdinal(d3.schemeCategory10); // Or any other D3 color scheme
+
+// ... (fetch and process data)
+
+const chart = venn.VennDiagram()
+    .width(width)
+    .height(height);
+
+vennContainer.datum(sets).call(chart);
+
+// Apply custom colors using d3.selectAll AFTER the chart is drawn
+d3.selectAll(".venn-circle path")
+    .style("fill", function(d) { return colorScale(d.sets.sort().join()); }); // Color based on sorted and joined set names
+
+// Create Legend with Colors (Corrected and Consistent)
+const legend = d3.select("#venn-diagram").append("div").attr("class", "legend");
+
+legend.selectAll("div")
+    .data(sets) // Use the sets array for consistent coloring
+    .enter().append("div")
+    .style("background-color", d => colorScale(d.sets.sort().join())) // Consistent color assignment
+    .text(d => `${d.sets.join()} (${d.size})`); // Corrected legend labels
+
+
+
+
+
+
+    });
+
+           
+        });
+
+
+    </script>
+
+</body>
+</html>
