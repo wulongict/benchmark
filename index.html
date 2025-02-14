@@ -63,7 +63,7 @@
 </head>
 <body>
 
-    <h1>Data Visualization Example</h1>
+    <h1>A Simple Benchmark System of Proteomic Data Analysis Tools</h1>
 
     <div class="container">
         <div class="chart-container">
@@ -84,11 +84,18 @@
         <div class="chart-container" id="venn-diagram">
             <h2>Venn Diagram</h2>
         </div>
-        
+        <div class="chart-container">
+            <h2>Proteins Identified</h2>
+            <canvas id="barChartProteins"></canvas>
+        </div>
 
         <div class="chart-container">
             <h2>Bar Chart</h2>
             <canvas id="barChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h2>Peptides Identified</h2>
+            <canvas id="barChartPeptides"></canvas>
         </div>
 
         <div class="chart-container">
@@ -133,6 +140,98 @@
                     });
                 }
             });
+            // Load table data to plot bar chart, table data is in the form of csv file. first row is header and from second row is data.
+            
+            // Load table data
+            loadData("data/table_data.txt", function (data) {
+                const table = document.getElementById("dataTable");
+                const lines = data.split('\n');
+                const header = lines[0].split(',');
+                // each row contains three values, first is label, second is value, third is another value. Now we just ignore the third value..
+                // extract the values of second column together wit the first column as label, create a bar chart.
+                const labels = [];
+                const dataValues = [];
+                const proteins = []
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    labels.push(values[0]);
+                    dataValues.push(values[1]);
+                    proteins.push(values[2]);
+                }
+                // Create a bar chart using Chart.js for peptides.
+                const barChartCanvas = document.getElementById('barChartPeptides').getContext('2d');
+
+                // we will create a bar chart with more than 10 different data points, please choose differnt color for different bar.
+                // can we make a list of colors and assign each color to each bar.
+                colors =[ 'rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)', 
+                'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 
+                'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)']
+                new Chart(barChartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Peptides',
+                            data: dataValues,
+                            backgroundColor: [
+                            // color white
+                            'rgba(128, 128, 128, 1)'
+                            ],
+                            borderColor: [
+                            // color black
+                            'rgba(0, 0, 0, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+
+                //--------------------Create a bar chart for proteins---------------------
+                // Create a bar chart using Chart.js for peptides.
+                const barChartCanvas_prot = document.getElementById('barChartProteins').getContext('2d');
+
+                // we will create a bar chart with more than 10 different data points, please choose differnt color for different bar.
+                // can we make a list of colors and assign each color to each bar.
+              
+                new Chart(barChartCanvas_prot, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Proteins',
+                            data: proteins,
+                            backgroundColor: [
+                            // color white
+                            'rgba(128, 128, 128, 1)'
+                            ],
+                            borderColor: [
+                            // color black
+                            'rgba(0, 0, 0, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+               
+            });
+
+            
 
             // Load bar chart data
             loadData("data/bar_chart_data.txt", function (data) {
