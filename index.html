@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Visualization Example</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/venn.js@0.2.20/venn.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@upsetjs/dist@1.0.0/dist/upsetjs.umd.min.js"></script> -->
-    <script src="https://unpkg.com/@upsetjs/bundle"></script>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Data Visualization Example</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/venn.js@0.2.20/venn.min.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/@upsetjs/dist@1.0.0/dist/upsetjs.umd.min.js"></script> -->
+        <script src="https://unpkg.com/@upsetjs/bundle"></script>
+        <style>
         /* Basic styling for the page */
         body {
             font-family: sans-serif;
@@ -85,57 +86,71 @@
 
         /* ... (same CSS as before) ... */
     </style>
-</head>
+    </head>
 
-<body>
+    <body>
 
-    <h1>A Simple Benchmark System of Proteomic Data Analysis Tools</h1>
+        <h1>A Simple Benchmark System of Proteomic Data Analysis Tools</h1>
 
-    <div class="container">
-        <div class="chart-container">
-            <h2>Table</h2>
-            <table id="dataTable">
-                <thead>
-                    <tr></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <!-- a input dropbox for user to choose comparison, defualt if point to data folder -->
+        <!-- make the container aligned to left. -->
+
+        <div class="container-left" style="visibility: hidden;">
+            <label for="path">Choose a comparison:</label>
+            <select name="path" id="path">
+                <option value="/data">Data</option>
+                <option value="/data2">Data2</option>
+                <option value="/data3">Data3</option>
+            </select>
         </div>
 
-        <div class="chart-container">
-            <h2>UpSet Plot</h2>
-            <div id="upset-plot"></div>
+        <div class="container">
+            <div class="chart-container">
+                <h2>Table</h2>
+                <table id="dataTable">
+                    <thead>
+                        <tr></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="chart-container" style="display: none;">
+                <h2>UpSet Plot</h2>
+                <div id="upset-plot"></div>
+            </div>
+
+            <div class="chart-container" id="venn-diagram" style="display: none;">
+                <h2>Venn Diagram</h2>
+            </div>
+            <div class="chart-container">
+                <h2>Proteins Identified</h2>
+                <canvas id="barChartProteins"></canvas>
+            </div>
+
+            <div class="chart-container" style="display: none;">
+                <h2>Bar Chart</h2>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Peptides Identified</h2>
+                <canvas id="barChartPeptides"></canvas>
+            </div>
+
+            <div class="chart-container" style="display: none;">
+                <h2>Line Chart</h2>
+                <canvas id="lineChart"></canvas>
+            </div>
         </div>
 
-        <div class="chart-container" id="venn-diagram">
-            <h2>Venn Diagram</h2>
-        </div>
-        <div class="chart-container">
-            <h2>Proteins Identified</h2>
-            <canvas id="barChartProteins"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h2>Bar Chart</h2>
-            <canvas id="barChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <h2>Peptides Identified</h2>
-            <canvas id="barChartPeptides"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h2>Line Chart</h2>
-            <canvas id="lineChart"></canvas>
-        </div>
-    </div>
-
-    <script>
+        <script>
 
 
 
 
         document.addEventListener('DOMContentLoaded', () => {
+            // determine the path with user input. 
+            // user input from a dropbox, which specify the path name. "/data"
 
             function loadData(filename, callback) {
                 fetch(filename)
@@ -144,8 +159,50 @@
                     .catch(error => console.error("Error loading data:", error));
             }
 
+            // use path in the loadData function to load data from the path.
+            // if path changed by user, the data will be reloaded.
+            
+            // check if path is changed by user, if changed, reload the data by call the render_comparisons function.
+            document.getElementById("path").addEventListener("change", function () {
+                const path = document.getElementById("path").value;
+                // clean the table data from element with id "dataTable"
+                document.getElementById("dataTable").querySelector("thead tr").innerHTML = "";
+                document.getElementById("dataTable").querySelector("tbody").innerHTML = "";
+                // also clean other charts canvas
+                document.getElementById("barChart").getContext('2d').clearRect(0, 0, document.getElementById("barChart").width, document.getElementById("barChart").height);
+                document.getElementById("barChartPeptides").getContext('2d').clearRect(0, 0, document.getElementById("barChartPeptides").width, document.getElementById("barChartPeptides").height);
+                document.getElementById("barChartProteins").getContext('2d').clearRect(0, 0, document.getElementById("barChartProteins").width, document.getElementById("barChartProteins").height);
+                document.getElementById("lineChart").getContext('2d').clearRect(0, 0, document.getElementById("lineChart").width, document.getElementById("lineChart").height);
+                // Cavas already in use, chart with ID must be destroyed before canvas with this id can be reused.
+                // destroy the chart with id "barChart"
+               
+                // also clean the upset plot and venn diagram
+                document.getElementById("upset-plot").innerHTML = "";
+                document.getElementById("venn-diagram").innerHTML = "";
+
+                render_comparisons(path);
+            });
+
+
+            // get the path from the dropbox
+            const path = document.getElementById("path").value;
+            render_comparisons(path);
+            
+
+
+            function render_comparisons(path){
+
             // Load table data
-            loadData("data/table_data.txt", function (data) {
+            loadData(path + "/table_data.txt", function (data) {
+                console.log(data);
+                // if table is not a csv file with at least three columns, do nothing.
+                if (data.split('\n')[0].split(',').length < 3) {
+                    // clean the table and return.
+                    document.getElementById("dataTable").querySelector("thead tr").innerHTML = "";
+                    document.getElementById("dataTable").querySelector("tbody").innerHTML = "";
+                    return;
+                }
+                
                 const table = document.getElementById("dataTable");
                 const lines = data.split('\n');
                 const header = lines[0].split(',');
@@ -169,7 +226,7 @@
             // Load table data to plot bar chart, table data is in the form of csv file. first row is header and from second row is data.
 
             // Load table data
-            loadData("data/table_data.txt", function (data) {
+            loadData(path+"/table_data.txt", function (data) {
                 const table = document.getElementById("dataTable");
                 const lines = data.split('\n');
                 const header = lines[0].split(',');
@@ -260,7 +317,7 @@
 
 
             // Load bar chart data
-            loadData("data/bar_chart_data.txt", function (data) {
+            loadData(path+"/bar_chart_data.txt", function (data) {
                 const lines = data.split('\n');
                 const labels = lines[0].split(',');
                 const dataValues = lines[1].split(',').map(Number);
@@ -299,7 +356,7 @@
             });
 
             // Load line chart data
-            loadData("data/line_chart_data.txt", function (data) {
+            loadData(path+"/line_chart_data.txt", function (data) {
                 const lines = data.split('\n');
                 const labels = lines[0].split(',');
                 const dataValues = lines[1].split(',').map(Number);
@@ -334,7 +391,7 @@
 
             // Load Venn Diagram data (from JSON)
             // Load Venn Diagram data (from JSON)
-            fetch('data/sets.json')
+            fetch(path+'/sets.json')
                 .then(response => response.json())
                 .then(setsData => {
                     const sets = [];
@@ -421,6 +478,7 @@
 
 
                 });
+            }
 
 
         });
@@ -428,6 +486,6 @@
 
     </script>
 
-</body>
+    </body>
 
 </html>
